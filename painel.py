@@ -181,5 +181,3 @@ elif pagina == "Boxplot por Estado":
 elif pagina == "Estatísticas Gerais":
     st.title("📊 Estatísticas Gerais")
     st.dataframe(df.describe())
-
-st.whire(df.head())
