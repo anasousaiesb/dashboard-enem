@@ -22,7 +22,6 @@ padding:25px;border-radius:12px'>
 <h1 style='color:white;'>📊 Análise do ENEM 2024</h1>
 <p style='color:white;font-size:16px'>
 Este painel interativo tem como objetivo apresentar uma análise exploratória dos dados do ENEM 2024, permitindo a visualização e interpretação de padrões relevantes no desempenho dos participantes. Por meio de técnicas de estatística descritiva e visualização de dados, são exploradas distribuições de notas, variações regionais e características dos candidatos, como a escolha de idioma na prova.
-
 A plataforma foi desenvolvida com o intuito de facilitar a compreensão dos dados de forma intuitiva, utilizando gráficos interativos que possibilitam uma análise dinâmica e comparativa. Dessa forma, o usuário pode identificar tendências, dispersões e diferenças significativas entre grupos, contribuindo para uma visão mais ampla e fundamentada dos resultados do exame.
 
 </p>
