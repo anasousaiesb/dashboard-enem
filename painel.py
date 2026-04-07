@@ -9,70 +9,27 @@ import requests
 # -------------------------
 st.set_page_config(page_title="Dashboard ENEM 2024", layout="wide")
 
-# -------------------------
-# CSS
-# -------------------------
-st.markdown("""
-<style>
-body {
-    background-color: #f8f0ff;
-}
-
-[data-testid="stSidebar"] {
-    background: linear-gradient(180deg, #E0AAFF, #C77DFF);
-}
-
-h1, h2, h3 {
-    color: #7B2CBF;
-}
-
-footer {
-    text-align: center;
-    color: #7B2CBF;
-    margin-top: 50px;
-}
-</style>
-""", unsafe_allow_html=True)
+# PALETA MAIS CLARA
+cores = ["#E0AAFF", "#C77DFF", "#9D4EDD", "#7B2CBF"]
+scale_roxo = ["#f8f0ff", "#e0aaff", "#c77dff", "#9d4edd"]
 
 # -------------------------
-# PALETA
-# -------------------------
-cores = ["#C77DFF", "#E0AAFF", "#D8B4FE", "#F3E8FF"]
-scale_roxo = ["#f8f0ff", "#E0AAFF", "#C77DFF", "#9D4EDD"]
-
-# -------------------------
-# HEADER
+# TÍTULO + TEXTO
 # -------------------------
 st.markdown("""
-<div style="background: linear-gradient(90deg, #E0AAFF, #C77DFF);
-padding: 25px;
-border-radius: 15px;
-text-align: center;
-color: #4B0082;">
-
-<h1>📊 Análise do ENEM 2024</h1>
-
-<p>
-Este painel interativo analisa os dados do ENEM 2024, explorando distribuições de notas,
-diferenças entre estados e padrões de desempenho.
+<div style='background: linear-gradient(90deg, #E0AAFF, #C77DFF);
+padding:25px;border-radius:12px'>
+<h1 style='color:white;'>📊 Dashboard ENEM 2024</h1>
+<p style='color:white;font-size:16px'>
+Este painel interativo apresenta uma análise exploratória dos dados do ENEM 2024, 
+permitindo visualizar distribuições de notas, diferenças entre estados e padrões educacionais 
+de forma clara e intuitiva.
 </p>
-
 </div>
 """, unsafe_allow_html=True)
 
 # -------------------------
-# MENU
-# -------------------------
-pagina = st.sidebar.radio("📂 Navegação", [
-    "Distribuição por Estado",
-    "Tipo de Linguagem",
-    "Distribuições por Nota",
-    "Boxplot por Estado",
-    "Estatísticas Gerais"
-])
-
-# -------------------------
-# GEOJSON (MAPA)
+# GEOJSON
 # -------------------------
 url = "https://raw.githubusercontent.com/codeforamerica/click_that_hood/master/public/data/brazil-states.geojson"
 geojson = requests.get(url).json()
@@ -106,54 +63,64 @@ FROM ed_enem_2024_resultados_amos_per
 
 df = pd.read_sql(query, conn)
 
+# LIMPEZA
 df = df.dropna()
 df["sg_uf_prova"] = df["sg_uf_prova"].str.strip().str.upper()
 
 # -------------------------
 # FILTROS
 # -------------------------
-st.sidebar.markdown("---")
+st.sidebar.header("🎛️ Filtros")
+
 ufs = st.sidebar.multiselect("Estados", sorted(df["sg_uf_prova"].unique()))
+
+nota_min, nota_max = st.sidebar.slider(
+    "Faixa da média",
+    float(df["nota_media_5_notas"].min()),
+    float(df["nota_media_5_notas"].max()),
+    (200.0, 800.0)
+)
 
 if ufs:
     df = df[df["sg_uf_prova"].isin(ufs)]
 
-# -------------------------
-# FUNÇÃO DISTRIBUIÇÃO
-# -------------------------
-def plot_dist(coluna, nome):
-    st.markdown(f"### {nome}")
-    col1, col2 = st.columns(2)
-
-    with col1:
-        fig_hist = px.histogram(df, x=coluna, nbins=30,
-                                color_discrete_sequence=[cores[0]])
-        st.plotly_chart(fig_hist, width='stretch')
-
-    with col2:
-        fig_box = px.box(df, y=coluna,
-                         color_discrete_sequence=[cores[1]])
-        st.plotly_chart(fig_box, width='stretch')
+df = df[(df["nota_media_5_notas"] >= nota_min) & (df["nota_media_5_notas"] <= nota_max)]
 
 # -------------------------
-# PÁGINAS
+# MENU PRINCIPAL (ABAS)
 # -------------------------
+abas = st.tabs([
+    "📍 Estados",
+    "🌍 Linguagem",
+    "📊 Notas",
+    "📦 Análises por Estado",
+    "📈 Estatísticas"
+])
 
-if pagina == "Distribuição por Estado":
-    st.title("📍 Distribuição por Estado")
+# -------------------------
+# 📍 ESTADOS
+# -------------------------
+with abas[0]:
+    st.subheader("Distribuição por Estado")
 
     dist = df["sg_uf_prova"].value_counts().reset_index()
-    dist.columns = ["UF", "Quantidade"]
+    dist.columns = ["Estado", "Quantidade"]
 
-    fig = px.bar(dist, x="UF", y="Quantidade",
-                 color="Quantidade",
-                 color_continuous_scale=scale_roxo)
+    fig = px.bar(
+        dist,
+        x="Estado",
+        y="Quantidade",
+        color="Quantidade",
+        color_continuous_scale=scale_roxo
+    )
 
     st.plotly_chart(fig, width='stretch')
 
-
-elif pagina == "Tipo de Linguagem":
-    st.title("🌍 Tipo de Linguagem")
+# -------------------------
+# 🌍 LINGUAGEM
+# -------------------------
+with abas[1]:
+    st.subheader("Tipo de Linguagem")
 
     df_lingua = df.copy()
     df_lingua["tp_lingua"] = df_lingua["tp_lingua"].replace({0: "Espanhol", 1: "Inglês"})
@@ -161,18 +128,23 @@ elif pagina == "Tipo de Linguagem":
     dist = df_lingua["tp_lingua"].value_counts().reset_index()
     dist.columns = ["Língua", "Quantidade"]
 
-    fig = px.bar(dist, x="Língua", y="Quantidade",
-                 color="Língua",
-                 color_discrete_sequence=cores)
+    fig = px.bar(
+        dist,
+        x="Língua",
+        y="Quantidade",
+        color="Língua",
+        color_discrete_sequence=cores
+    )
 
     st.plotly_chart(fig, width='stretch')
 
+# -------------------------
+# 📊 NOTAS (SUBABAS)
+# -------------------------
+with abas[2]:
+    st.subheader("Distribuições por Nota")
 
-# 🔥 SUBPÁGINAS VOLTARAM
-elif pagina == "Distribuições por Nota":
-    st.title("📈 Distribuições por Nota")
-
-    subpagina = st.radio("Escolha a nota:", [
+    subabas = st.tabs([
         "Matemática",
         "Linguagens",
         "Humanas",
@@ -180,34 +152,48 @@ elif pagina == "Distribuições por Nota":
         "Redação"
     ])
 
-    if subpagina == "Matemática":
-        plot_dist("nota_mt_matematica", "Matemática")
+    def plot_nota(coluna):
+        col1, col2 = st.columns(2)
 
-    elif subpagina == "Linguagens":
-        plot_dist("nota_lc_linguagens_e_codigos", "Linguagens")
+        with col1:
+            fig = px.histogram(df, x=coluna, nbins=30,
+                               color_discrete_sequence=[cores[1]])
+            st.plotly_chart(fig, width='stretch')
 
-    elif subpagina == "Humanas":
-        plot_dist("nota_ch_ciencias_humanas", "Humanas")
+        with col2:
+            fig = px.box(df, y=coluna,
+                         color_discrete_sequence=[cores[2]])
+            st.plotly_chart(fig, width='stretch')
 
-    elif subpagina == "Natureza":
-        plot_dist("nota_cn_ciencias_da_natureza", "Natureza")
+    with subabas[0]:
+        plot_nota("nota_mt_matematica")
 
-    elif subpagina == "Redação":
-        plot_dist("nota_redacao", "Redação")
+    with subabas[1]:
+        plot_nota("nota_lc_linguagens_e_codigos")
 
+    with subabas[2]:
+        plot_nota("nota_ch_ciencias_humanas")
 
-# 🔥 AQUI É A PARTE PRINCIPAL QUE VOCÊ PEDIU
-elif pagina == "Boxplot por Estado":
-    st.title("📦 Boxplot + Mapa por Estado")
+    with subabas[3]:
+        plot_nota("nota_cn_ciencias_da_natureza")
 
-    col1, col2 = st.columns(2)
+    with subabas[4]:
+        plot_nota("nota_redacao")
+
+# -------------------------
+# 📦 ESTADO (MAPA + BOXPLOT)
+# -------------------------
+with abas[3]:
+    st.subheader("Análises por Estado")
+
+    subabas2 = st.tabs(["Mapa", "Boxplot"])
 
     # MAPA
-    with col1:
+    with subabas2[0]:
         mapa = df.groupby("sg_uf_prova")["nota_media_5_notas"].mean().reset_index()
         mapa.columns = ["sigla", "media"]
 
-        fig_mapa = px.choropleth(
+        fig = px.choropleth(
             mapa,
             geojson=geojson,
             locations="sigla",
@@ -216,31 +202,32 @@ elif pagina == "Boxplot por Estado":
             color_continuous_scale=scale_roxo
         )
 
-        fig_mapa.update_geos(fitbounds="locations", visible=False)
-        st.plotly_chart(fig_mapa, width='stretch')
+        fig.update_geos(fitbounds="locations", visible=False)
+        st.plotly_chart(fig, width='stretch')
 
     # BOXPLOT
-    with col2:
-        fig_box = px.box(
+    with subabas2[1]:
+        fig = px.box(
             df,
             x="sg_uf_prova",
             y="nota_media_5_notas",
-            color_discrete_sequence=[cores[0]]
+            color_discrete_sequence=[cores[1]]
         )
 
-        st.plotly_chart(fig_box, width='stretch')
+        st.plotly_chart(fig, width='stretch')
 
-
-elif pagina == "Estatísticas Gerais":
-    st.title("📊 Estatísticas Gerais")
+# -------------------------
+# 📈 ESTATÍSTICAS
+# -------------------------
+with abas[4]:
+    st.subheader("Estatísticas Gerais")
     st.dataframe(df.describe())
-
 
 # -------------------------
 # RODAPÉ
 # -------------------------
-st.markdown("""
-<footer>
-Desenvolvido por <b>Ana Sophia Sousa</b> 💜
-</footer>
-""", unsafe_allow_html=True)
+st.markdown("---")
+st.markdown(
+    "<p style='text-align:center;color:gray'>Desenvolvido por Ana Sophia Sousa</p>",
+    unsafe_allow_html=True
+)
