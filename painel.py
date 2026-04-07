@@ -7,7 +7,7 @@ import requests
 # -------------------------
 # CONFIGURAÇÃO
 # -------------------------
-st.set_page_config(page_title="Dashboard ENEM 2024", layout="wide")
+st.set_page_config(page_title="Análise do ENEM 2024", layout="wide")
 
 # PALETA MAIS CLARA
 cores = ["#E0AAFF", "#C77DFF", "#9D4EDD", "#7B2CBF"]
@@ -19,11 +19,12 @@ scale_roxo = ["#f8f0ff", "#e0aaff", "#c77dff", "#9d4edd"]
 st.markdown("""
 <div style='background: linear-gradient(90deg, #E0AAFF, #C77DFF);
 padding:25px;border-radius:12px'>
-<h1 style='color:white;'>📊 Dashboard ENEM 2024</h1>
+<h1 style='color:white;'>📊 Análise do ENEM 2024</h1>
 <p style='color:white;font-size:16px'>
-Este painel interativo apresenta uma análise exploratória dos dados do ENEM 2024, 
-permitindo visualizar distribuições de notas, diferenças entre estados e padrões educacionais 
-de forma clara e intuitiva.
+Este painel interativo tem como objetivo apresentar uma análise exploratória dos dados do ENEM 2024, permitindo a visualização e interpretação de padrões relevantes no desempenho dos participantes. Por meio de técnicas de estatística descritiva e visualização de dados, são exploradas distribuições de notas, variações regionais e características dos candidatos, como a escolha de idioma na prova.
+
+A plataforma foi desenvolvida com o intuito de facilitar a compreensão dos dados de forma intuitiva, utilizando gráficos interativos que possibilitam uma análise dinâmica e comparativa. Dessa forma, o usuário pode identificar tendências, dispersões e diferenças significativas entre grupos, contribuindo para uma visão mais ampla e fundamentada dos resultados do exame.
+
 </p>
 </div>
 """, unsafe_allow_html=True)
@@ -70,7 +71,7 @@ df["sg_uf_prova"] = df["sg_uf_prova"].str.strip().str.upper()
 # -------------------------
 # FILTROS
 # -------------------------
-st.sidebar.header("🎛️ Filtros")
+st.sidebar.header(" Filtros")
 
 ufs = st.sidebar.multiselect("Estados", sorted(df["sg_uf_prova"].unique()))
 
@@ -90,11 +91,11 @@ df = df[(df["nota_media_5_notas"] >= nota_min) & (df["nota_media_5_notas"] <= no
 # MENU PRINCIPAL (ABAS)
 # -------------------------
 abas = st.tabs([
-    "📍 Estados",
-    "🌍 Linguagem",
-    "📊 Notas",
-    "📦 Análises por Estado",
-    "📈 Estatísticas"
+    " Distribuição Geográfica",
+    " Idioma",
+    " Notas",
+    " Desempenho Geral",
+    " Estatísticas"
 ])
 
 # -------------------------
